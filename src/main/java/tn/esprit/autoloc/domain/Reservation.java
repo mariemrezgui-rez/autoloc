@@ -25,4 +25,12 @@ public class Reservation {
 
     @Enumerated(EnumType.STRING)
     private StatutReservation statut;
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "id_vehicule")
+private Vehicule vehicule;
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "id_client")
+private Client client;
 }

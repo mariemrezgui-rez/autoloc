@@ -25,4 +25,7 @@ public class Contrat {
     private BigDecimal montantTotal;
 
     private Boolean valide;
+    @OneToOne
+    @JoinColumn(name = "id_reservation", unique = true)
+    private Reservation reservation;
 }
