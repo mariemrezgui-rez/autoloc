@@ -18,4 +18,6 @@ public class Equipement {
     private Long idEquipement;
 
     private String libelle;
+
+    private Integer quantite;
 }

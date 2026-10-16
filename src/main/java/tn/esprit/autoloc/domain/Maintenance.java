@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -24,6 +25,8 @@ public class Maintenance {
     private LocalDate dateFin;
 
     private String description;
+
+    private BigDecimal cout;
 
 @ManyToOne(fetch = FetchType.LAZY)
 @JoinColumn(name = "id_vehicule")
