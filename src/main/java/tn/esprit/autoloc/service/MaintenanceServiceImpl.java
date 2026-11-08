@@ -2,48 +2,54 @@ package tn.esprit.autoloc.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Maintenance;
+import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.dto.MaintenanceRequestDTO;
+import tn.esprit.autoloc.dto.MaintenanceResponseDTO;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
+import tn.esprit.autoloc.mapper.MaintenanceMapper;
 import tn.esprit.autoloc.repository.IMaintenanceRepository;
+import tn.esprit.autoloc.repository.IVehiculeRepository;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class MaintenanceServiceImpl implements IMaintenanceService {
 
     private final IMaintenanceRepository maintenanceRepository;
+    private final IVehiculeRepository vehiculeRepository;
+    private final MaintenanceMapper maintenanceMapper;
 
     @Override
-    public Maintenance create(Maintenance maintenance) {
-        if (maintenance.getIdMaintenance() != null) {
-            throw new IllegalArgumentException("L'id de la maintenance doit être null lors de la création");
-        }
-        verifierRegles(maintenance);
-        return maintenanceRepository.save(maintenance);
+    public MaintenanceResponseDTO create(MaintenanceRequestDTO dto) {
+        Maintenance maintenance = maintenanceMapper.toEntity(dto);
+        maintenance.setVehicule(chargerVehicule(dto.getVehiculeId()));
+        return maintenanceMapper.toDTO(maintenanceRepository.save(maintenance));
     }
 
     @Override
-    public Maintenance findById(Long id) {
-        return maintenanceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance", id));
+    @Transactional(readOnly = true)
+    public MaintenanceResponseDTO findById(Long id) {
+        return maintenanceMapper.toDTO(chargerMaintenance(id));
     }
 
     @Override
-    public List<Maintenance> findAll() {
-        return maintenanceRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<MaintenanceResponseDTO> findAll() {
+        return maintenanceRepository.findAll().stream()
+                .map(maintenanceMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public Maintenance update(Long id, Maintenance maintenance) {
-        Maintenance existante = findById(id);
-        verifierRegles(maintenance);
-        existante.setDateDebut(maintenance.getDateDebut());
-        existante.setDateFin(maintenance.getDateFin());
-        existante.setDescription(maintenance.getDescription());
-        existante.setCout(maintenance.getCout());
-        existante.setVehicule(maintenance.getVehicule());
-        return maintenanceRepository.save(existante);
+    public MaintenanceResponseDTO update(Long id, MaintenanceRequestDTO dto) {
+        Maintenance existante = chargerMaintenance(id);
+        maintenanceMapper.updateEntity(existante, dto);
+        existante.setVehicule(chargerVehicule(dto.getVehiculeId()));
+        return maintenanceMapper.toDTO(maintenanceRepository.save(existante));
     }
 
     @Override
@@ -54,13 +60,13 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
         maintenanceRepository.deleteById(id);
     }
 
-    private void verifierRegles(Maintenance maintenance) {
-        if (maintenance.getCout() == null || maintenance.getCout().signum() < 0) {
-            throw new IllegalArgumentException("Le coût de la maintenance doit être supérieur ou égal à 0");
-        }
-        if (maintenance.getDateDebut() != null && maintenance.getDateFin() != null
-                && maintenance.getDateFin().isBefore(maintenance.getDateDebut())) {
-            throw new IllegalArgumentException("La date de fin doit être postérieure ou égale à la date de début");
-        }
+    private Maintenance chargerMaintenance(Long id) {
+        return maintenanceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Maintenance", id));
+    }
+
+    private Vehicule chargerVehicule(Long id) {
+        return vehiculeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicule", id));
     }
 }

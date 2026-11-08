@@ -2,48 +2,59 @@ package tn.esprit.autoloc.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tn.esprit.autoloc.domain.Client;
 import tn.esprit.autoloc.domain.Reservation;
+import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.dto.ReservationRequestDTO;
+import tn.esprit.autoloc.dto.ReservationResponseDTO;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
+import tn.esprit.autoloc.mapper.ReservationMapper;
+import tn.esprit.autoloc.repository.IClientRepository;
 import tn.esprit.autoloc.repository.IReservationRepository;
+import tn.esprit.autoloc.repository.IVehiculeRepository;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ReservationServiceImpl implements IReservationService {
 
     private final IReservationRepository reservationRepository;
+    private final IVehiculeRepository vehiculeRepository;
+    private final IClientRepository clientRepository;
+    private final ReservationMapper reservationMapper;
 
     @Override
-    public Reservation create(Reservation reservation) {
-        if (reservation.getIdReservation() != null) {
-            throw new IllegalArgumentException("L'id de la réservation doit être null lors de la création");
-        }
-        verifierDates(reservation);
-        return reservationRepository.save(reservation);
+    public ReservationResponseDTO create(ReservationRequestDTO dto) {
+        Reservation reservation = reservationMapper.toEntity(dto);
+        reservation.setVehicule(chargerVehicule(dto.getVehiculeId()));
+        reservation.setClient(chargerClient(dto.getClientId()));
+        return reservationMapper.toDTO(reservationRepository.save(reservation));
     }
 
     @Override
-    public Reservation findById(Long id) {
-        return reservationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Reservation", id));
+    @Transactional(readOnly = true)
+    public ReservationResponseDTO findById(Long id) {
+        return reservationMapper.toDTO(chargerReservation(id));
     }
 
     @Override
-    public List<Reservation> findAll() {
-        return reservationRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<ReservationResponseDTO> findAll() {
+        return reservationRepository.findAll().stream()
+                .map(reservationMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public Reservation update(Long id, Reservation reservation) {
-        Reservation existante = findById(id);
-        verifierDates(reservation);
-        existante.setDateDebut(reservation.getDateDebut());
-        existante.setDateFin(reservation.getDateFin());
-        existante.setStatut(reservation.getStatut());
-        existante.setVehicule(reservation.getVehicule());
-        existante.setClient(reservation.getClient());
-        return reservationRepository.save(existante);
+    public ReservationResponseDTO update(Long id, ReservationRequestDTO dto) {
+        Reservation existante = chargerReservation(id);
+        reservationMapper.updateEntity(existante, dto);
+        existante.setVehicule(chargerVehicule(dto.getVehiculeId()));
+        existante.setClient(chargerClient(dto.getClientId()));
+        return reservationMapper.toDTO(reservationRepository.save(existante));
     }
 
     @Override
@@ -54,10 +65,18 @@ public class ReservationServiceImpl implements IReservationService {
         reservationRepository.deleteById(id);
     }
 
-    private void verifierDates(Reservation reservation) {
-        if (reservation.getDateDebut() != null && reservation.getDateFin() != null
-                && reservation.getDateFin().isBefore(reservation.getDateDebut())) {
-            throw new IllegalArgumentException("La date de fin doit être postérieure ou égale à la date de début");
-        }
+    private Reservation chargerReservation(Long id) {
+        return reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation", id));
+    }
+
+    private Vehicule chargerVehicule(Long id) {
+        return vehiculeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicule", id));
+    }
+
+    private Client chargerClient(Long id) {
+        return clientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Client", id));
     }
 }

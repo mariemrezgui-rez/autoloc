@@ -1,5 +1,6 @@
 package tn.esprit.autoloc.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,7 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Maintenance;
+import tn.esprit.autoloc.dto.MaintenanceRequestDTO;
+import tn.esprit.autoloc.dto.MaintenanceResponseDTO;
 import tn.esprit.autoloc.service.IMaintenanceService;
 
 import java.util.List;
@@ -25,23 +27,23 @@ public class MaintenanceController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Maintenance create(@RequestBody Maintenance maintenance) {
-        return maintenanceService.create(maintenance);
+    public MaintenanceResponseDTO create(@Valid @RequestBody MaintenanceRequestDTO dto) {
+        return maintenanceService.create(dto);
     }
 
     @GetMapping("/{id}")
-    public Maintenance findById(@PathVariable Long id) {
+    public MaintenanceResponseDTO findById(@PathVariable Long id) {
         return maintenanceService.findById(id);
     }
 
     @GetMapping
-    public List<Maintenance> findAll() {
+    public List<MaintenanceResponseDTO> findAll() {
         return maintenanceService.findAll();
     }
 
     @PutMapping("/{id}")
-    public Maintenance update(@PathVariable Long id, @RequestBody Maintenance maintenance) {
-        return maintenanceService.update(id, maintenance);
+    public MaintenanceResponseDTO update(@PathVariable Long id, @Valid @RequestBody MaintenanceRequestDTO dto) {
+        return maintenanceService.update(id, dto);
     }
 
     @DeleteMapping("/{id}")

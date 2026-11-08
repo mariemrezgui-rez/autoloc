@@ -2,47 +2,54 @@ package tn.esprit.autoloc.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Contrat;
+import tn.esprit.autoloc.domain.Reservation;
+import tn.esprit.autoloc.dto.ContratRequestDTO;
+import tn.esprit.autoloc.dto.ContratResponseDTO;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
+import tn.esprit.autoloc.mapper.ContratMapper;
 import tn.esprit.autoloc.repository.IContratRepository;
+import tn.esprit.autoloc.repository.IReservationRepository;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ContratServiceImpl implements IContratService {
 
     private final IContratRepository contratRepository;
+    private final IReservationRepository reservationRepository;
+    private final ContratMapper contratMapper;
 
     @Override
-    public Contrat create(Contrat contrat) {
-        if (contrat.getIdContrat() != null) {
-            throw new IllegalArgumentException("L'id du contrat doit être null lors de la création");
-        }
-        verifierMontantTotal(contrat);
-        return contratRepository.save(contrat);
+    public ContratResponseDTO create(ContratRequestDTO dto) {
+        Contrat contrat = contratMapper.toEntity(dto);
+        contrat.setReservation(chargerReservation(dto.getReservationId()));
+        return contratMapper.toDTO(contratRepository.save(contrat));
     }
 
     @Override
-    public Contrat findById(Long id) {
-        return contratRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Contrat", id));
+    @Transactional(readOnly = true)
+    public ContratResponseDTO findById(Long id) {
+        return contratMapper.toDTO(chargerContrat(id));
     }
 
     @Override
-    public List<Contrat> findAll() {
-        return contratRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<ContratResponseDTO> findAll() {
+        return contratRepository.findAll().stream()
+                .map(contratMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public Contrat update(Long id, Contrat contrat) {
-        Contrat existante = findById(id);
-        verifierMontantTotal(contrat);
-        existante.setDateSignature(contrat.getDateSignature());
-        existante.setMontantTotal(contrat.getMontantTotal());
-        existante.setValide(contrat.getValide());
-        existante.setReservation(contrat.getReservation());
-        return contratRepository.save(existante);
+    public ContratResponseDTO update(Long id, ContratRequestDTO dto) {
+        Contrat existante = chargerContrat(id);
+        contratMapper.updateEntity(existante, dto);
+        existante.setReservation(chargerReservation(dto.getReservationId()));
+        return contratMapper.toDTO(contratRepository.save(existante));
     }
 
     @Override
@@ -53,9 +60,13 @@ public class ContratServiceImpl implements IContratService {
         contratRepository.deleteById(id);
     }
 
-    private void verifierMontantTotal(Contrat contrat) {
-        if (contrat.getMontantTotal() != null && contrat.getMontantTotal().signum() < 0) {
-            throw new IllegalArgumentException("Le montant total du contrat ne peut pas être négatif");
-        }
+    private Contrat chargerContrat(Long id) {
+        return contratRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contrat", id));
+    }
+
+    private Reservation chargerReservation(Long id) {
+        return reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation", id));
     }
 }

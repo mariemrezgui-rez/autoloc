@@ -1,0 +1,489 @@
+### =====================================================================
+### AutoLoc API - Jeux de tests HTTP (Atelier 6 : DTO + Validation)
+### ---------------------------------------------------------------------
+### Prérequis : application démarrée sur http://localhost:8081
+### Le context-path Spring vaut /api. Certains contrôleurs déclarent déjà
+### /api/... dans leur @RequestMapping : leurs URLs réelles contiennent
+### donc /api/api/... (comportement existant conservé).
+###
+### Exécuter les blocs dans l'ordre des dépendances. Les IDs utilisés
+### sont 1 : utilisez une base vide (ddl-auto=create-drop ou purge) ou
+### adaptez les identifiants. Les DELETE d'une entité parente doivent
+### être exécutés après ceux de ses entités dépendantes (sinon 409).
+### =====================================================================
+
+@host = http://localhost:8081
+@agencesUrl = {{host}}/api/agences
+@equipementsUrl = {{host}}/api/api/equipements
+@employesUrl = {{host}}/api/api/employes
+@vehiculesUrl = {{host}}/api/api/vehicules
+@clientsUrl = {{host}}/api/api/clients
+@reservationsUrl = {{host}}/api/api/reservations
+@contratsUrl = {{host}}/api/api/contrats
+@paiementsUrl = {{host}}/api/api/paiements
+@maintenancesUrl = {{host}}/api/api/maintenances
+
+
+### =====================================================================
+### 1. AGENCE
+### =====================================================================
+
+### GET all - Agences (200)
+GET {{agencesUrl}}
+
+### GET by id - Agence (200)
+GET {{agencesUrl}}/1
+
+### POST valide - Agence (201)
+POST {{agencesUrl}}
+Content-Type: application/json
+
+{
+  "nom": "AutoLoc Centre",
+  "ville": "Tunis",
+  "adresse": "12 Avenue Habib Bourguiba",
+  "telephone": "+216 71 123 456"
+}
+
+### POST invalide - Agence sans nom (400)
+POST {{agencesUrl}}
+Content-Type: application/json
+
+{
+  "nom": "",
+  "ville": "Tunis",
+  "adresse": "12 Avenue Habib Bourguiba",
+  "telephone": "abc"
+}
+
+### PUT - Agence (200)
+PUT {{agencesUrl}}/1
+Content-Type: application/json
+
+{
+  "nom": "AutoLoc Centre Ville",
+  "ville": "Tunis",
+  "adresse": "15 Avenue Habib Bourguiba",
+  "telephone": "+216 71 654 321"
+}
+
+### DELETE - Agence (204)
+DELETE {{agencesUrl}}/1
+
+### GET id inexistant - Agence (404)
+GET {{agencesUrl}}/99999
+
+
+### =====================================================================
+### 2. EQUIPEMENT (à créer avant le véhicule)
+### =====================================================================
+
+### GET all - Equipements (200)
+GET {{equipementsUrl}}
+
+### GET by id - Equipement (200)
+GET {{equipementsUrl}}/1
+
+### POST valide - Equipement (201)
+POST {{equipementsUrl}}
+Content-Type: application/json
+
+{
+  "libelle": "GPS",
+  "quantite": 5
+}
+
+### POST invalide - Equipement quantité négative (400)
+POST {{equipementsUrl}}
+Content-Type: application/json
+
+{
+  "libelle": "",
+  "quantite": -1
+}
+
+### PUT - Equipement (200)
+PUT {{equipementsUrl}}/1
+Content-Type: application/json
+
+{
+  "libelle": "GPS intégré",
+  "quantite": 8
+}
+
+### DELETE - Equipement (204)
+DELETE {{equipementsUrl}}/1
+
+### GET id inexistant - Equipement (404)
+GET {{equipementsUrl}}/99999
+
+
+### =====================================================================
+### 3. EMPLOYE (dépend de l'agence)
+### =====================================================================
+
+### GET all - Employes (200)
+GET {{employesUrl}}
+
+### GET by id - Employe (200)
+GET {{employesUrl}}/1
+
+### POST valide - Employe (201)
+POST {{employesUrl}}
+Content-Type: application/json
+
+{
+  "nom": "Ben Ali",
+  "prenom": "Sami",
+  "role": "AGENT",
+  "agenceId": 1
+}
+
+### POST invalide - Employe rôle inconnu (400)
+POST {{employesUrl}}
+Content-Type: application/json
+
+{
+  "nom": "",
+  "prenom": "Sami",
+  "role": "DIRECTEUR",
+  "agenceId": 1
+}
+
+### PUT - Employe (200)
+PUT {{employesUrl}}/1
+Content-Type: application/json
+
+{
+  "nom": "Ben Ali",
+  "prenom": "Sami",
+  "role": "MANAGER",
+  "agenceId": 1
+}
+
+### DELETE - Employe (204)
+DELETE {{employesUrl}}/1
+
+### GET id inexistant - Employe (404)
+GET {{employesUrl}}/99999
+
+
+### =====================================================================
+### 4. VEHICULE (dépend de l'agence et des équipements)
+### =====================================================================
+
+### GET all - Vehicules (200)
+GET {{vehiculesUrl}}
+
+### GET by id - Vehicule (200)
+GET {{vehiculesUrl}}/1
+
+### POST valide - Vehicule (201)
+POST {{vehiculesUrl}}
+Content-Type: application/json
+
+{
+  "immatriculation": "TN-123-AB",
+  "marque": "Peugeot",
+  "modele": "208",
+  "categorie": "BERLINE",
+  "tarifJournalier": 85.50,
+  "statut": "DISPONIBLE",
+  "agenceId": 1,
+  "equipementIds": [1]
+}
+
+### POST invalide - Vehicule tarif négatif et statut manquant (400)
+POST {{vehiculesUrl}}
+Content-Type: application/json
+
+{
+  "immatriculation": "",
+  "marque": "Peugeot",
+  "modele": "208",
+  "categorie": "BERLINE",
+  "tarifJournalier": -10,
+  "agenceId": 1
+}
+
+### PUT - Vehicule (200)
+PUT {{vehiculesUrl}}/1
+Content-Type: application/json
+
+{
+  "immatriculation": "TN-123-AB",
+  "marque": "Peugeot",
+  "modele": "208 GT",
+  "categorie": "BERLINE",
+  "tarifJournalier": 95.00,
+  "statut": "LOUE",
+  "agenceId": 1,
+  "equipementIds": [1]
+}
+
+### DELETE - Vehicule (204)
+DELETE {{vehiculesUrl}}/1
+
+### GET id inexistant - Vehicule (404)
+GET {{vehiculesUrl}}/99999
+
+
+### =====================================================================
+### 5. CLIENT
+### =====================================================================
+
+### GET all - Clients (200)
+GET {{clientsUrl}}
+
+### GET by id - Client (200)
+GET {{clientsUrl}}/1
+
+### POST valide - Client (201)
+POST {{clientsUrl}}
+Content-Type: application/json
+
+{
+  "nom": "Trabelsi",
+  "prenom": "Ines",
+  "email": "ines.trabelsi@example.com",
+  "telephone": "+216 98 123 456",
+  "numPermis": "PERMIS12345",
+  "dateInscription": "2024-01-15"
+}
+
+### POST invalide - Client e-mail invalide (400)
+POST {{clientsUrl}}
+Content-Type: application/json
+
+{
+  "nom": "Trabelsi",
+  "prenom": "Ines",
+  "email": "email-invalide",
+  "telephone": "+216 98 123 456",
+  "numPermis": "PERMIS12345",
+  "dateInscription": "2024-01-15"
+}
+
+### PUT - Client (200)
+PUT {{clientsUrl}}/1
+Content-Type: application/json
+
+{
+  "nom": "Trabelsi",
+  "prenom": "Ines",
+  "email": "ines.trabelsi@example.com",
+  "telephone": "+216 98 654 321",
+  "numPermis": "PERMIS12345",
+  "dateInscription": "2024-01-15"
+}
+
+### DELETE - Client (204)
+DELETE {{clientsUrl}}/1
+
+### GET id inexistant - Client (404)
+GET {{clientsUrl}}/99999
+
+
+### =====================================================================
+### 6. RESERVATION (dépend du véhicule et du client)
+### =====================================================================
+
+### GET all - Reservations (200)
+GET {{reservationsUrl}}
+
+### GET by id - Reservation (200)
+GET {{reservationsUrl}}/1
+
+### POST valide - Reservation (201)
+POST {{reservationsUrl}}
+Content-Type: application/json
+
+{
+  "dateDebut": "2030-01-10",
+  "dateFin": "2030-01-15",
+  "statut": "EN_ATTENTE",
+  "vehiculeId": 1,
+  "clientId": 1
+}
+
+### POST invalide - Reservation dateFin avant dateDebut (400)
+POST {{reservationsUrl}}
+Content-Type: application/json
+
+{
+  "dateDebut": "2030-01-15",
+  "dateFin": "2030-01-10",
+  "statut": "EN_ATTENTE",
+  "vehiculeId": 1,
+  "clientId": 1
+}
+
+### PUT - Reservation (200)
+PUT {{reservationsUrl}}/1
+Content-Type: application/json
+
+{
+  "dateDebut": "2030-01-10",
+  "dateFin": "2030-01-20",
+  "statut": "CONFIRMEE",
+  "vehiculeId": 1,
+  "clientId": 1
+}
+
+### DELETE - Reservation (204)
+DELETE {{reservationsUrl}}/1
+
+### GET id inexistant - Reservation (404)
+GET {{reservationsUrl}}/99999
+
+
+### =====================================================================
+### 7. CONTRAT (dépend de la réservation)
+### =====================================================================
+
+### GET all - Contrats (200)
+GET {{contratsUrl}}
+
+### GET by id - Contrat (200)
+GET {{contratsUrl}}/1
+
+### POST valide - Contrat (201)
+POST {{contratsUrl}}
+Content-Type: application/json
+
+{
+  "dateSignature": "2030-01-10",
+  "montantTotal": 500.00,
+  "valide": true,
+  "reservationId": 1
+}
+
+### POST invalide - Contrat montant manquant (400)
+POST {{contratsUrl}}
+Content-Type: application/json
+
+{
+  "dateSignature": "2030-01-10",
+  "valide": true,
+  "reservationId": 1
+}
+
+### PUT - Contrat (200)
+PUT {{contratsUrl}}/1
+Content-Type: application/json
+
+{
+  "dateSignature": "2030-01-11",
+  "montantTotal": 550.00,
+  "valide": true,
+  "reservationId": 1
+}
+
+### DELETE - Contrat (204)
+DELETE {{contratsUrl}}/1
+
+### GET id inexistant - Contrat (404)
+GET {{contratsUrl}}/99999
+
+
+### =====================================================================
+### 8. PAIEMENT (dépend du contrat)
+### =====================================================================
+
+### GET all - Paiements (200)
+GET {{paiementsUrl}}
+
+### GET by id - Paiement (200)
+GET {{paiementsUrl}}/1
+
+### POST valide - Paiement (201)
+POST {{paiementsUrl}}
+Content-Type: application/json
+
+{
+  "montant": 500.00,
+  "datePaiement": "2030-01-10",
+  "modePaiement": "CARTE",
+  "contratId": 1
+}
+
+### POST invalide - Paiement montant nul (400)
+POST {{paiementsUrl}}
+Content-Type: application/json
+
+{
+  "montant": 0,
+  "datePaiement": "2030-01-10",
+  "modePaiement": "CARTE",
+  "contratId": 1
+}
+
+### PUT - Paiement (200)
+PUT {{paiementsUrl}}/1
+Content-Type: application/json
+
+{
+  "montant": 550.00,
+  "datePaiement": "2030-01-11",
+  "modePaiement": "VIREMENT",
+  "contratId": 1
+}
+
+### DELETE - Paiement (204)
+DELETE {{paiementsUrl}}/1
+
+### GET id inexistant - Paiement (404)
+GET {{paiementsUrl}}/99999
+
+
+### =====================================================================
+### 9. MAINTENANCE (dépend du véhicule)
+### =====================================================================
+
+### GET all - Maintenances (200)
+GET {{maintenancesUrl}}
+
+### GET by id - Maintenance (200)
+GET {{maintenancesUrl}}/1
+
+### POST valide - Maintenance (201)
+POST {{maintenancesUrl}}
+Content-Type: application/json
+
+{
+  "dateDebut": "2029-12-01",
+  "dateFin": "2029-12-05",
+  "description": "Vidange et révision",
+  "cout": 120.00,
+  "vehiculeId": 1
+}
+
+### POST invalide - Maintenance dateFin avant dateDebut (400)
+POST {{maintenancesUrl}}
+Content-Type: application/json
+
+{
+  "dateDebut": "2029-12-05",
+  "dateFin": "2029-12-01",
+  "description": "",
+  "cout": -50,
+  "vehiculeId": 1
+}
+
+### PUT - Maintenance (200)
+PUT {{maintenancesUrl}}/1
+Content-Type: application/json
+
+{
+  "dateDebut": "2029-12-01",
+  "dateFin": "2029-12-07",
+  "description": "Vidange, révision et freins",
+  "cout": 180.00,
+  "vehiculeId": 1
+}
+
+### DELETE - Maintenance (204)
+DELETE {{maintenancesUrl}}/1
+
+### GET id inexistant - Maintenance (404)
+GET {{maintenancesUrl}}/99999

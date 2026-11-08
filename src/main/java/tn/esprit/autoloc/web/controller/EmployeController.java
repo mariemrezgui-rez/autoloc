@@ -1,5 +1,6 @@
 package tn.esprit.autoloc.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,7 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Employe;
+import tn.esprit.autoloc.dto.EmployeRequestDTO;
+import tn.esprit.autoloc.dto.EmployeResponseDTO;
 import tn.esprit.autoloc.service.IEmployeService;
 
 import java.util.List;
@@ -25,23 +27,23 @@ public class EmployeController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Employe create(@RequestBody Employe employe) {
-        return employeService.create(employe);
+    public EmployeResponseDTO create(@Valid @RequestBody EmployeRequestDTO dto) {
+        return employeService.create(dto);
     }
 
     @GetMapping("/{id}")
-    public Employe findById(@PathVariable Long id) {
+    public EmployeResponseDTO findById(@PathVariable Long id) {
         return employeService.findById(id);
     }
 
     @GetMapping
-    public List<Employe> findAll() {
+    public List<EmployeResponseDTO> findAll() {
         return employeService.findAll();
     }
 
     @PutMapping("/{id}")
-    public Employe update(@PathVariable Long id, @RequestBody Employe employe) {
-        return employeService.update(id, employe);
+    public EmployeResponseDTO update(@PathVariable Long id, @Valid @RequestBody EmployeRequestDTO dto) {
+        return employeService.update(id, dto);
     }
 
     @DeleteMapping("/{id}")

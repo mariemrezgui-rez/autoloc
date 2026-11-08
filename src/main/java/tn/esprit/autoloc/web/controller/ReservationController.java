@@ -1,5 +1,6 @@
 package tn.esprit.autoloc.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,7 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Reservation;
+import tn.esprit.autoloc.dto.ReservationRequestDTO;
+import tn.esprit.autoloc.dto.ReservationResponseDTO;
 import tn.esprit.autoloc.service.IReservationService;
 
 import java.util.List;
@@ -25,23 +27,23 @@ public class ReservationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Reservation create(@RequestBody Reservation reservation) {
-        return reservationService.create(reservation);
+    public ReservationResponseDTO create(@Valid @RequestBody ReservationRequestDTO dto) {
+        return reservationService.create(dto);
     }
 
     @GetMapping("/{id}")
-    public Reservation findById(@PathVariable Long id) {
+    public ReservationResponseDTO findById(@PathVariable Long id) {
         return reservationService.findById(id);
     }
 
     @GetMapping
-    public List<Reservation> findAll() {
+    public List<ReservationResponseDTO> findAll() {
         return reservationService.findAll();
     }
 
     @PutMapping("/{id}")
-    public Reservation update(@PathVariable Long id, @RequestBody Reservation reservation) {
-        return reservationService.update(id, reservation);
+    public ReservationResponseDTO update(@PathVariable Long id, @Valid @RequestBody ReservationRequestDTO dto) {
+        return reservationService.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
