@@ -2,6 +2,7 @@ package tn.esprit.autoloc.service;
 
 import tn.esprit.autoloc.dto.MaintenanceRequestDTO;
 import tn.esprit.autoloc.dto.MaintenanceResponseDTO;
+import tn.esprit.autoloc.dto.VehiculeDTO;
 
 import java.util.List;
 
@@ -16,4 +17,6 @@ public interface IMaintenanceService {
     MaintenanceResponseDTO update(Long id, MaintenanceRequestDTO dto);
 
     void deleteById(Long id);
+
+    VehiculeDTO affecterMaintenanceAvehicule(String description, String immatriculation);
 }

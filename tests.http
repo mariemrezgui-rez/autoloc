@@ -22,6 +22,7 @@
 @contratsUrl = {{host}}/api/api/contrats
 @paiementsUrl = {{host}}/api/api/paiements
 @maintenancesUrl = {{host}}/api/api/maintenances
+@reservationsContratsUrl = {{host}}/api/api/reservations-contrats
 
 
 ### =====================================================================
@@ -487,3 +488,83 @@ DELETE {{maintenancesUrl}}/1
 
 ### GET id inexistant - Maintenance (404)
 GET {{maintenancesUrl}}/99999
+
+
+### =====================================================================
+### 10. ATELIER 7 - AFFECTATIONS
+### =====================================================================
+
+### PUT - Affecter une reservation a un client (200)
+PUT {{reservationsUrl}}/1/client?nom=Trabelsi&prenom=Ines
+
+### PUT - Reservation inexistante (404)
+PUT {{reservationsUrl}}/99999/client?nom=Trabelsi&prenom=Ines
+
+### PUT - Client introuvable par nom et prenom (404)
+PUT {{reservationsUrl}}/1/client?nom=Inconnu&prenom=Personne
+
+### PUT - Affecter un equipement a un vehicule (200)
+PUT {{vehiculesUrl}}/1/equipements/1
+
+### PUT - Vehicule inexistant (404)
+PUT {{vehiculesUrl}}/99999/equipements/1
+
+### PUT - Equipement inexistant (404)
+PUT {{vehiculesUrl}}/1/equipements/99999
+
+### POST - Affecter une maintenance a un vehicule (200)
+POST {{maintenancesUrl}}/affecter?description=Vidange%20et%20revision&immatriculation=TN-123-AB
+
+### POST - Immatriculation introuvable (404)
+POST {{maintenancesUrl}}/affecter?description=Vidange&immatriculation=INCONNUE
+
+### POST - Affecter un contrat a la reservation sans contrat de la periode (200)
+POST {{contratsUrl}}/affecter?dateSignature=2030-01-10&dateDebut=2030-01-10&dateFin=2030-01-15
+
+### POST - Aucune reservation sans contrat sur la periode (404)
+POST {{contratsUrl}}/affecter?dateSignature=2030-01-10&dateDebut=2099-01-10&dateFin=2099-01-15
+
+### POST valide - Reservation et contrat associe (201)
+POST {{reservationsContratsUrl}}
+Content-Type: application/json
+
+{
+  "dateDebut": "2030-02-10",
+  "dateFin": "2030-02-15",
+  "statut": "CONFIRMEE",
+  "vehiculeId": 1,
+  "clientId": 1,
+  "dateSignature": "2030-02-10",
+  "montantTotal": 500.00,
+  "valide": true
+}
+
+### POST - Reservation et contrat, vehicule inexistant (404)
+POST {{reservationsContratsUrl}}
+Content-Type: application/json
+
+{
+  "dateDebut": "2030-02-10",
+  "dateFin": "2030-02-15",
+  "statut": "CONFIRMEE",
+  "vehiculeId": 99999,
+  "clientId": 1,
+  "dateSignature": "2030-02-10",
+  "montantTotal": 500.00,
+  "valide": true
+}
+
+### POST invalide - Reservation et contrat, periode invalide (400)
+POST {{reservationsContratsUrl}}
+Content-Type: application/json
+
+{
+  "dateDebut": "2030-02-15",
+  "dateFin": "2030-02-10",
+  "statut": "CONFIRMEE",
+  "vehiculeId": 1,
+  "clientId": 1,
+  "dateSignature": "2030-02-10",
+  "montantTotal": 500.00,
+  "valide": true
+}

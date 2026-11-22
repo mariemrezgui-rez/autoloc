@@ -3,6 +3,7 @@ package tn.esprit.autoloc.mapper;
 import org.springframework.stereotype.Component;
 import tn.esprit.autoloc.domain.Contrat;
 import tn.esprit.autoloc.domain.Reservation;
+import tn.esprit.autoloc.dto.ContratDTO;
 import tn.esprit.autoloc.dto.ContratRequestDTO;
 import tn.esprit.autoloc.dto.ContratResponseDTO;
 
@@ -17,6 +18,23 @@ public class ContratMapper {
 
     public ContratResponseDTO toDTO(Contrat contrat) {
         ContratResponseDTO dto = new ContratResponseDTO();
+        dto.setIdContrat(contrat.getIdContrat());
+        dto.setDateSignature(contrat.getDateSignature());
+        dto.setMontantTotal(contrat.getMontantTotal());
+        dto.setValide(contrat.getValide());
+
+        Reservation reservation = contrat.getReservation();
+        if (reservation != null) {
+            dto.setReservationId(reservation.getIdReservation());
+            dto.setReservationDateDebut(reservation.getDateDebut());
+            dto.setReservationDateFin(reservation.getDateFin());
+            dto.setReservationStatut(reservation.getStatut());
+        }
+        return dto;
+    }
+
+    public ContratDTO toContratDTO(Contrat contrat) {
+        ContratDTO dto = new ContratDTO();
         dto.setIdContrat(contrat.getIdContrat());
         dto.setDateSignature(contrat.getDateSignature());
         dto.setMontantTotal(contrat.getMontantTotal());

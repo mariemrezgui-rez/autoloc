@@ -6,6 +6,7 @@ import tn.esprit.autoloc.domain.Reservation;
 import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.dto.ReservationRequestDTO;
 import tn.esprit.autoloc.dto.ReservationResponseDTO;
+import tn.esprit.autoloc.dto.ReservationWithContratRequestDTO;
 
 @Component
 public class ReservationMapper {
@@ -13,6 +14,14 @@ public class ReservationMapper {
     public Reservation toEntity(ReservationRequestDTO dto) {
         Reservation reservation = new Reservation();
         updateEntity(reservation, dto);
+        return reservation;
+    }
+
+    public Reservation toEntity(ReservationWithContratRequestDTO dto) {
+        Reservation reservation = new Reservation();
+        reservation.setDateDebut(dto.getDateDebut());
+        reservation.setDateFin(dto.getDateFin());
+        reservation.setStatut(dto.getStatut());
         return reservation;
     }
 

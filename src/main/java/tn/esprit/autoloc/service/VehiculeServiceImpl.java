@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Agence;
 import tn.esprit.autoloc.domain.Equipement;
 import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.dto.VehiculeDTO;
 import tn.esprit.autoloc.dto.VehiculeRequestDTO;
 import tn.esprit.autoloc.dto.VehiculeResponseDTO;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
@@ -68,6 +69,18 @@ public class VehiculeServiceImpl implements IVehiculeService {
         vehiculeRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public VehiculeDTO affecterVehiculeAEquipement(Long idVehicule, Long idEquipement) {
+        Vehicule vehicule = chargerVehicule(idVehicule);
+        Equipement equipement = chargerEquipement(idEquipement);
+        if (vehicule.getEquipements() == null) {
+            vehicule.setEquipements(new HashSet<>());
+        }
+        vehicule.getEquipements().add(equipement);
+        return vehiculeMapper.toVehiculeDTO(vehiculeRepository.save(vehicule));
+    }
+
     private Vehicule chargerVehicule(Long id) {
         return vehiculeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicule", id));
@@ -76,6 +89,11 @@ public class VehiculeServiceImpl implements IVehiculeService {
     private Agence chargerAgence(Long id) {
         return agenceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Agence", id));
+    }
+
+    private Equipement chargerEquipement(Long id) {
+        return equipementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Equipement", id));
     }
 
     private Set<Equipement> chargerEquipements(Set<Long> equipementIds) {

@@ -4,13 +4,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Client;
+import tn.esprit.autoloc.domain.Contrat;
 import tn.esprit.autoloc.domain.Reservation;
 import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.dto.ReservationRequestDTO;
 import tn.esprit.autoloc.dto.ReservationResponseDTO;
+import tn.esprit.autoloc.dto.ReservationWithContratRequestDTO;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.mapper.ReservationMapper;
 import tn.esprit.autoloc.repository.IClientRepository;
+import tn.esprit.autoloc.repository.IContratRepository;
 import tn.esprit.autoloc.repository.IReservationRepository;
 import tn.esprit.autoloc.repository.IVehiculeRepository;
 
@@ -24,6 +27,7 @@ public class ReservationServiceImpl implements IReservationService {
     private final IReservationRepository reservationRepository;
     private final IVehiculeRepository vehiculeRepository;
     private final IClientRepository clientRepository;
+    private final IContratRepository contratRepository;
     private final ReservationMapper reservationMapper;
 
     @Override
@@ -63,6 +67,34 @@ public class ReservationServiceImpl implements IReservationService {
             throw new ResourceNotFoundException("Reservation", id);
         }
         reservationRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public ReservationResponseDTO affecterReservationAClient(Long idReservation, String nom, String prenom) {
+        Reservation reservation = chargerReservation(idReservation);
+        Client client = clientRepository.findByNomAndPrenom(nom, prenom)
+                .orElseThrow(() -> new ResourceNotFoundException("Client " + nom + " " + prenom));
+        reservation.setClient(client);
+        return reservationMapper.toDTO(reservationRepository.save(reservation));
+    }
+
+    @Override
+    @Transactional
+    public ReservationResponseDTO creerReservationEtContratAssocie(ReservationWithContratRequestDTO requestDTO) {
+        Reservation reservation = reservationMapper.toEntity(requestDTO);
+        reservation.setVehicule(chargerVehicule(requestDTO.getVehiculeId()));
+        reservation.setClient(chargerClient(requestDTO.getClientId()));
+        Reservation reservationSauvegardee = reservationRepository.save(reservation);
+
+        Contrat contrat = new Contrat();
+        contrat.setDateSignature(requestDTO.getDateSignature());
+        contrat.setMontantTotal(requestDTO.getMontantTotal());
+        contrat.setValide(requestDTO.getValide());
+        contrat.setReservation(reservationSauvegardee);
+        contratRepository.save(contrat);
+
+        return reservationMapper.toDTO(reservationSauvegardee);
     }
 
     private Reservation chargerReservation(Long id) {

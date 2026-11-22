@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import tn.esprit.autoloc.domain.Agence;
 import tn.esprit.autoloc.domain.Equipement;
 import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.dto.VehiculeDTO;
 import tn.esprit.autoloc.dto.VehiculeRequestDTO;
 import tn.esprit.autoloc.dto.VehiculeResponseDTO;
 
@@ -22,6 +23,31 @@ public class VehiculeMapper {
 
     public VehiculeResponseDTO toDTO(Vehicule vehicule) {
         VehiculeResponseDTO dto = new VehiculeResponseDTO();
+        dto.setIdVehicule(vehicule.getIdVehicule());
+        dto.setImmatriculation(vehicule.getImmatriculation());
+        dto.setMarque(vehicule.getMarque());
+        dto.setModele(vehicule.getModele());
+        dto.setCategorie(vehicule.getCategorie());
+        dto.setTarifJournalier(vehicule.getTarifJournalier());
+        dto.setStatut(vehicule.getStatut());
+
+        Agence agence = vehicule.getAgence();
+        if (agence != null) {
+            dto.setAgenceId(agence.getIdAgence());
+            dto.setAgenceNom(agence.getNom());
+        }
+
+        if (vehicule.getEquipements() != null) {
+            Set<Long> equipementIds = vehicule.getEquipements().stream()
+                    .map(Equipement::getIdEquipement)
+                    .collect(Collectors.toCollection(HashSet::new));
+            dto.setEquipementIds(equipementIds);
+        }
+        return dto;
+    }
+
+    public VehiculeDTO toVehiculeDTO(Vehicule vehicule) {
+        VehiculeDTO dto = new VehiculeDTO();
         dto.setIdVehicule(vehicule.getIdVehicule());
         dto.setImmatriculation(vehicule.getImmatriculation());
         dto.setMarque(vehicule.getMarque());
